@@ -7,7 +7,7 @@ readme = "README.md"
 homepage = "https://github.com/hegde-atri/gcal_notifs"
 repository = "https://github.com/hegde-atri/gcal_notifs"
 keywords = ["calendar", "notification", "utility"]
-categories = ["daemon"]
+categories = ["command-line-utilities"]
 version = "0.0.1"
 edition = "2021"
 
