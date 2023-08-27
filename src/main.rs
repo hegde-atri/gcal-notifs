@@ -1,30 +1,24 @@
-use std::{fs, thread, time::Duration};
+mod args;
 
-use clap::{App, Arg};
+use args::{Action, GcndArgs};
+use clap::Parser;
 use daemonize::Daemonize;
 use notify_rust::Notification;
+use rodio::Sink;
+use std::{fs, thread, time::Duration};
 
 extern crate daemonize;
 extern crate notify_rust;
 
-fn main() {
-    let matches = App::new("Google Calendar Notification Daemon")
-        .version("0.0.1")
-        .author("Atri Hegde")
-        .about("A Google calendar notification daemon")
-        .arg(
-            Arg::with_name("action")
-                .help("Action to perform: start, stop or status")
-                .required(true)
-                .index(1),
-        )
-        .get_matches();
+const SOUND_FILE: &[u8] = include_bytes!("../ping.mp3");
 
-    match matches.value_of("action").unwrap() {
-        "start" => start_daemon(),
-        "stop" => stop_daemon(),
-        "status" => check_status(),
-        _ => println!("Invalid action. Use 'start', 'stop' or 'status'."),
+fn main() {
+    let args = GcndArgs::parse();
+
+    match args.action {
+        Action::Start => start_daemon(),
+        Action::Stop => stop_daemon(),
+        Action::Status => check_status(),
     }
 }
 
@@ -72,7 +66,14 @@ fn check_status() {
 }
 
 fn daemon_action() {
+    // Setup audio sink
+    let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
+    let sink = Sink::try_new(&stream_handle).unwrap();
+
     loop {
+        if let Err(err) = play_sound(&sink) {
+            eprintln!("Error playing notification sound: {}", err);
+        }
         let _ = Notification::new()
             .summary("Event title")
             .body("Event time + location")
@@ -80,4 +81,10 @@ fn daemon_action() {
 
         thread::sleep(Duration::from_secs(60));
     }
+}
+
+fn play_sound(sink: &Sink) -> Result<(), rodio::decoder::DecoderError> {
+    let source = rodio::Decoder::new(std::io::Cursor::new(SOUND_FILE))?;
+    sink.append(source);
+    Ok(())
 }
