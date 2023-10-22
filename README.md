@@ -1,1 +1,1 @@
-# Project moved to [codeberg](https://codeberg.org/hegde-atri/cal_notifs)
+# Project moved to [GitLab](https://gitlab.com/hegde-atri/cal_notifs)
